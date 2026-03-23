@@ -18,26 +18,33 @@ function App() {
 
   // 3. Efeito de Carregamento do SDK (Injeção Dinâmica)
   useEffect(() => {
-    addLog("Aguardando SDK do Asaas...");
+    addLog("Iniciando varredura de segurança...");
 
-    const verificar = () => {
-      if (window.Asaas) {
-        addLog("✅ SUCESSO: SDK encontrado no sistema!");
+    // Função que tenta detectar o Asaas
+    const tentarDetectar = () => {
+      if (typeof window.Asaas !== 'undefined') {
+        addLog("✅ SUCESSO: Objeto Asaas encontrado!");
         setIsSdkReady(true);
         return true;
       }
       return false;
     };
 
-    // Tenta agora
-    if (!verificar()) {
-      // Se não achou, tenta a cada 2 segundos até achar
-      const timer = setInterval(() => {
-        if (verificar()) clearInterval(timer);
-      }, 2000);
+    // Tenta detectar 10 vezes, uma a cada segundo
+    let tentativas = 0;
+    const interval = setInterval(() => {
+      tentativas++;
+      addLog(`Tentativa ${tentativas} de 10...`);
       
-      return () => clearInterval(timer);
-    }
+      if (tentarDetectar()) {
+        clearInterval(interval);
+      } else if (tentativas >= 10) {
+        addLog("❌ FALHA: O script está no HTML mas não ativou o objeto Asaas.");
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // 4. Lógica de Envio
