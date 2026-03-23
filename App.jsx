@@ -2,7 +2,51 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 
 function App() {
+  const [debugLog, setDebugLog] = useState(["Iniciando diagnóstico..."]);
   const [isSdkReady, setIsSdkReady] = useState(false);
+
+  const addLog = (msg) => setDebugLog(prev => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
+
+  useEffect(() => {
+    addLog("Tentando carregar script do Asaas...");
+    
+    const script = document.createElement('script');
+    script.src = "https://static.asaas.com/js/sdk/asaas-v3.js";
+    script.async = true;
+
+    script.onload = () => {
+      if (window.Asaas) {
+        addLog("✅ SUCESSO: window.Asaas encontrado!");
+        setIsSdkReady(true);
+      } else {
+        addLog("❌ ERRO: Script carregou, mas window.Asaas está undefined.");
+      }
+    };
+
+    script.onerror = () => {
+      addLog("❌ ERRO CRÍTICO: O Navegador bloqueou o download do script.");
+    };
+
+    document.head.appendChild(script);
+  }, []);
+
+  return (
+    <div style={{ padding: '20px', fontFamily: 'monospace' }}>
+      <h2>Painel de Diagnóstico de Segurança</h2>
+      <div style={{ backgroundColor: '#000', color: '#0f0', padding: '15px', borderRadius: '5px', minHeight: '150px' }}>
+        {debugLog.map((log, i) => <div key={i}>{log}</div>)}
+      </div>
+      
+      {isSdkReady ? (
+        <p style={{color: 'green'}}>🔥 SDK PRONTO! O botão de pagamento pode ser liberado.</p>
+      ) : (
+        <p style={{color: 'red'}}>⏳ Aguardando... Se o erro persistir, verifique o Console (F12).</p>
+      )}
+    </div>
+  );
+}
+
+  
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     nome: '',
