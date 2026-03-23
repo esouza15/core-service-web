@@ -18,7 +18,8 @@ function App() {
     e.preventDefault();
     try {
       // AQUI ESTÁ A MÁGICA: Apontando para o seu backend no Render
-      const response = await axios.post('https://core-service-api.onrender.com/checkout/credit-card', formData);
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const response = await axios.post(`${API_URL}/checkout/credit-card`, formData);
       alert('Resposta do Servidor: ' + response.data.msg);
     } catch (error) {
       console.error(error);
