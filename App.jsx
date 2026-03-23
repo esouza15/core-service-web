@@ -18,35 +18,23 @@ function App() {
 
   // 3. Efeito de Carregamento do SDK (Injeção Dinâmica)
   useEffect(() => {
-    addLog("Tentando carregar script do Asaas...");
+    addLog("Verificando presença do SDK Asaas...");
     
-    if (document.getElementById('asaas-sdk')) {
+    // Tenta encontrar o SDK a cada 1 segundo (máximo 5 tentativas)
+    let tentativas = 0;
+    const interval = setInterval(() => {
+      tentativas++;
       if (window.Asaas) {
+        addLog("✅ SUCESSO: SDK detectado no objeto window!");
         setIsSdkReady(true);
-        addLog("✅ SDK já estava presente.");
+        clearInterval(interval);
+      } else if (tentativas > 5) {
+        addLog("❌ TIMEOUT: O navegador não liberou o SDK após 5s.");
+        clearInterval(interval);
       }
-      return;
-    }
+    }, 1000);
 
-    const script = document.createElement('script');
-    script.id = 'asaas-sdk';
-    script.src = "https://static.asaas.com/js/sdk/asaas-v3.js";
-    script.async = true;
-
-    script.onload = () => {
-      if (window.Asaas) {
-        addLog("✅ SUCESSO: window.Asaas carregado!");
-        setIsSdkReady(true);
-      } else {
-        addLog("❌ ERRO: Script carregou mas objeto undefined.");
-      }
-    };
-
-    script.onerror = () => {
-      addLog("❌ ERRO CRÍTICO: Download bloqueado pelo navegador.");
-    };
-
-    document.head.appendChild(script);
+    return () => clearInterval(interval);
   }, []);
 
   // 4. Lógica de Envio
