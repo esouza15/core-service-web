@@ -16,33 +16,38 @@ function App() {
 
   const addLog = (msg) => setDebugLog(prev => [...prev, `${new Date().toLocaleTimeString()}: ${msg}`]);
 
-  // 3. Efeito de Carregamento do SDK (Injeção Dinâmica)
+  // --- SEÇÃO 3: VERIFICAÇÃO BLINDADA (Localização: useEffect) ---
+  // Objetivo: Tentar detectar o Asaas sem travar o restante do React.
   useEffect(() => {
     addLog("Iniciando varredura de segurança...");
 
-    // Função que tenta detectar o Asaas
-    const tentarDetectar = () => {
-      if (typeof window.Asaas !== 'undefined') {
-        addLog("✅ SUCESSO: Objeto Asaas encontrado!");
-        setIsSdkReady(true);
-        return true;
+    const checarStatus = () => {
+      try {
+        // Usamos window?.Asaas para evitar erro se window for null
+        if (typeof window !== 'undefined' && window.Asaas) {
+          addLog("✅ SUCESSO: Objeto Asaas encontrado!");
+          setIsSdkReady(true);
+          return true;
+        }
+      } catch (e) {
+        console.error("Erro na varredura:", e);
       }
       return false;
     };
 
-    // Tenta detectar 10 vezes, uma a cada segundo
     let tentativas = 0;
     const interval = setInterval(() => {
       tentativas++;
+      // Apenas adicionamos log se o componente ainda estiver montado
       addLog(`Tentativa ${tentativas} de 10...`);
       
-      if (tentarDetectar()) {
+      if (checarStatus()) {
         clearInterval(interval);
       } else if (tentativas >= 10) {
-        addLog("❌ FALHA: O script está no HTML mas não ativou o objeto Asaas.");
+        addLog("❌ FALHA: SDK não detectado. Verifique o console do navegador.");
         clearInterval(interval);
       }
-    }, 1000);
+    }, 1500); // Aumentamos um pouco o tempo entre tentativas
 
     return () => clearInterval(interval);
   }, []);
